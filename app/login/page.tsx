@@ -26,17 +26,8 @@ function LoginForm() {
     }
   }, [searchParams])
 
-  // Check if already logged in
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        console.log('✅ User already logged in, redirecting to dashboard')
-        router.push('/dashboard')
-      }
-    }
-    checkUser()
-  }, [supabase, router])
+  // REMOVED: Client-side "already logged in" check that caused infinite loop
+  // Server-side middleware and dashboard will handle auth checks
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -68,14 +59,11 @@ function LoginForm() {
 
       if (data.session) {
         console.log('✅ Login successful for:', data.user?.email)
-        console.log('🔑 Session:', {
-          userId: data.user?.id,
-          email: data.user?.email,
-          expiresAt: new Date(data.session.expires_at! * 1000).toISOString()
-        })
+        console.log('🔑 Session created, redirecting...')
         
-        // Force a hard navigation to dashboard
-        window.location.href = '/dashboard'
+        // Use router.push instead of window.location.href for better UX
+        router.push('/dashboard')
+        router.refresh() // Force refresh to update server components
       } else {
         console.warn('⚠️ Login succeeded but no session returned')
         setError('Login riuscito ma sessione non creata. Contatta il supporto.')
