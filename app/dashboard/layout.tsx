@@ -2,6 +2,9 @@ import { createServerClient } from '@/lib/supabase/client'
 import { redirect } from 'next/navigation'
 import { ReactNode } from 'react'
 
+// Force dynamic rendering (don't try to prerender at build time)
+export const dynamic = 'force-dynamic'
+
 export default async function DashboardLayout({
   children,
 }: {

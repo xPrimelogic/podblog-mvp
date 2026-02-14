@@ -1,5 +1,8 @@
 import { createServerClient } from '@/lib/supabase/client'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 export default async function DashboardPage() {
   const supabase = createServerClient()
   const { data: { user } } = await supabase.auth.getUser()

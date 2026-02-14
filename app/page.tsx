@@ -3,6 +3,9 @@ import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 export default async function Home() {
   const supabase = createServerClient()
   const { data: { session } } = await supabase.auth.getSession()
