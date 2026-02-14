@@ -1,7 +1,7 @@
 import { createServerClient } from '@/lib/supabase/client'
 
 export default async function DashboardPage() {
-  const supabase = await createServerClient()
+  const supabase = createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   
   const { data: profile } = await supabase

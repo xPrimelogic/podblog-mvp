@@ -1,17 +1,15 @@
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
-export const createClient = () => createClientComponentClient()
-
-export const createServerClient = async () => {
-  const cookieStore = await cookies()
-  return createServerComponentClient({ cookies: () => cookieStore })
+// Client-side Supabase client (for use in client components)
+export const createClient = () => {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 }
 
-// Alternative: Direct Supabase client (use if auth-helpers give issues)
-export const createDirectClient = () => {
+// Server-side Supabase client (for use in server components and API routes)
+export const createServerClient = () => {
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!

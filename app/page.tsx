@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
 export default async function Home() {
-  const supabase = await createServerClient()
+  const supabase = createServerClient()
   const { data: { session } } = await supabase.auth.getSession()
 
   // Se l'utente è già autenticato, reindirizza alla dashboard
