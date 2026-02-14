@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,24 +14,76 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
+
+  // Check for errors from callback
+  useEffect(() => {
+    const errorParam = searchParams.get('error')
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam))
+    }
+  }, [searchParams])
+
+  // Check if already logged in
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        console.log('✅ User already logged in, redirecting to dashboard')
+        router.push('/dashboard')
+      }
+    }
+    checkUser()
+  }, [supabase, router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    console.log('🔐 Attempting login for:', email)
 
-    if (error) {
-      setError(error.message)
+    try {
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (signInError) {
+        console.error('❌ Login error:', signInError.message)
+        
+        // User-friendly error messages
+        if (signInError.message.includes('Invalid login credentials')) {
+          setError('Email o password non corretti. Riprova.')
+        } else if (signInError.message.includes('Email not confirmed')) {
+          setError('Email non confermata. Controlla la tua casella di posta.')
+        } else {
+          setError(signInError.message)
+        }
+        setLoading(false)
+        return
+      }
+
+      if (data.session) {
+        console.log('✅ Login successful for:', data.user?.email)
+        console.log('🔑 Session:', {
+          userId: data.user?.id,
+          email: data.user?.email,
+          expiresAt: new Date(data.session.expires_at! * 1000).toISOString()
+        })
+        
+        // Force a hard navigation to dashboard
+        window.location.href = '/dashboard'
+      } else {
+        console.warn('⚠️ Login succeeded but no session returned')
+        setError('Login riuscito ma sessione non creata. Contatta il supporto.')
+        setLoading(false)
+      }
+    } catch (err) {
+      console.error('❌ Unexpected error during login:', err)
+      setError('Errore imprevisto. Riprova.')
       setLoading(false)
-    } else {
-      router.push('/dashboard')
-      router.refresh()
     }
   }
 
@@ -48,6 +100,8 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={loading}
+              autoComplete="email"
             />
           </div>
           <div>
@@ -58,16 +112,22 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={loading}
+              autoComplete="current-password"
             />
           </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-700 text-sm font-medium">⚠️ {error}</p>
+            </div>
+          )}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Login...' : 'Accedi'}
+            {loading ? '🔄 Login in corso...' : '🔐 Accedi'}
           </Button>
         </form>
         <p className="mt-4 text-center text-sm">
           Non hai un account?{' '}
-          <a href="/signup" className="text-blue-600 hover:underline">
+          <a href="/signup" className="text-blue-600 hover:underline font-medium">
             Registrati
           </a>
         </p>

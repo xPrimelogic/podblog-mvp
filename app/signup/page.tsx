@@ -24,34 +24,46 @@ export default function SignupPage() {
     setError('')
     setSuccess(false)
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-        },
-        emailRedirectTo: `${window.location.origin}/dashboard`,
-      },
-    })
+    console.log('📝 Attempting signup for:', email)
 
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-    } else {
+    try {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+        },
+      })
+
+      if (signUpError) {
+        console.error('❌ Signup error:', signUpError.message)
+        setError(signUpError.message)
+        setLoading(false)
+        return
+      }
+
       // Check if email confirmation is required
       if (data.user && data.user.identities && data.user.identities.length === 0) {
-        setError('Un account con questa email esiste già')
+        console.warn('⚠️ User already exists')
+        setError('Un account con questa email esiste già. Prova a fare login.')
         setLoading(false)
       } else if (data.session) {
-        // Auto-signed in (email confirmation disabled)
-        router.push('/dashboard')
-        router.refresh()
+        // Auto-signed in (email confirmation disabled in Supabase settings)
+        console.log('✅ Auto-signed in (no email confirmation required)')
+        window.location.href = '/dashboard'
       } else {
         // Email confirmation required
+        console.log('✅ Signup successful, email confirmation required')
         setSuccess(true)
         setLoading(false)
       }
+    } catch (err) {
+      console.error('❌ Unexpected error during signup:', err)
+      setError('Errore imprevisto. Riprova.')
+      setLoading(false)
     }
   }
 
@@ -59,13 +71,24 @@ export default function SignupPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
         <Card className="w-full max-w-md p-8">
-          <h1 className="text-2xl font-bold mb-4 text-green-600">Registrazione completata!</h1>
-          <p className="text-gray-700 mb-4">
-            Controlla la tua email per confermare l&apos;account.
-          </p>
+          <div className="text-center mb-6">
+            <div className="text-6xl mb-4">📧</div>
+            <h1 className="text-2xl font-bold text-green-600">Registrazione completata!</h1>
+          </div>
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+            <p className="text-gray-700 mb-2">
+              <strong>Controlla la tua email:</strong> {email}
+            </p>
+            <p className="text-sm text-gray-600">
+              Ti abbiamo inviato un link di conferma. Clicca sul link nell&apos;email per attivare il tuo account.
+            </p>
+          </div>
           <Button onClick={() => router.push('/login')} className="w-full">
             Vai al Login
           </Button>
+          <p className="text-xs text-gray-500 mt-4 text-center">
+            Non hai ricevuto l&apos;email? Controlla la cartella spam.
+          </p>
         </Card>
       </div>
     )
@@ -84,6 +107,8 @@ export default function SignupPage() {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
+              disabled={loading}
+              autoComplete="name"
             />
           </div>
           <div>
@@ -94,6 +119,8 @@ export default function SignupPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={loading}
+              autoComplete="email"
             />
           </div>
           <div>
@@ -105,17 +132,23 @@ export default function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
+              disabled={loading}
+              autoComplete="new-password"
             />
             <p className="text-xs text-gray-500 mt-1">Minimo 6 caratteri</p>
           </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-700 text-sm font-medium">⚠️ {error}</p>
+            </div>
+          )}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Registrazione...' : 'Registrati'}
+            {loading ? '🔄 Registrazione...' : '📝 Registrati'}
           </Button>
         </form>
         <p className="mt-4 text-center text-sm">
           Hai già un account?{' '}
-          <a href="/login" className="text-blue-600 hover:underline">
+          <a href="/login" className="text-blue-600 hover:underline font-medium">
             Accedi
           </a>
         </p>
