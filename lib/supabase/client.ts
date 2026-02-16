@@ -1,4 +1,5 @@
-import { createBrowserClient } from '@supabase/ssr'
+import { createBrowserClient, createServerClient as createServerClientSSR } from '@supabase/ssr'
+import { createClient as createClientJS } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Singleton instance for browser client
@@ -25,6 +26,40 @@ export const createClient = (): SupabaseClient => {
   console.log('✅ Supabase SSR browser client created')
   
   return supabaseBrowserInstance
+}
+
+// Server-side Supabase client factory (for server components & API routes)
+// This is a factory function, not a singleton, because it needs cookie context
+export const createServerClient = (cookieStore: any): SupabaseClient => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('❌ Supabase environment variables are not set!')
+    throw new Error('Missing Supabase environment variables')
+  }
+
+  return createServerClientSSR(supabaseUrl, supabaseKey, {
+    cookies: {
+      get(name: string) {
+        return cookieStore?.get(name)?.value
+      },
+      set(name: string, value: string, options: any) {
+        cookieStore?.set({
+          name,
+          value,
+          ...options,
+        })
+      },
+      remove(name: string, options: any) {
+        cookieStore?.set({
+          name,
+          value: '',
+          ...options,
+        })
+      },
+    },
+  })
 }
 
 // Utility function to get the current singleton instance (for debugging)

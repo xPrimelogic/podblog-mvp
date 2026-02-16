@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import OpenAI from 'openai'
+import { createClient as createDeepgramClient } from '@deepgram/sdk'
 import YTDlpWrap from 'yt-dlp-wrap'
-import { writeFile, unlink, mkdir } from 'fs/promises'
+import { writeFile, unlink, mkdir, readFile } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
 
@@ -14,6 +15,8 @@ const supabase = createClient(
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 })
+
+const deepgram = createDeepgramClient(process.env.DEEPGRAM_API_KEY!)
 
 export async function POST(request: NextRequest) {
   const { articleId, userId, type, url, filePath } = await request.json()
@@ -52,8 +55,8 @@ export async function POST(request: NextRequest) {
       await writeFile(audioPath, Buffer.from(buffer))
     }
 
-    // Step 2: Transcribe with Whisper
-    console.log('Transcribing with Whisper...')
+    // Step 2: Transcribe with Deepgram Nova-2
+    console.log('Transcribing with Deepgram Nova-2...')
     const transcript = await transcribeAudio(audioPath)
 
     // Step 3: Generate SEO article
@@ -134,17 +137,36 @@ async function downloadAudio(url: string, tmpDir: string, articleId: string): Pr
 
 async function transcribeAudio(audioPath: string): Promise<string> {
   try {
-    const audioFile = await import('fs').then(fs => fs.createReadStream(audioPath))
+    // Read audio file
+    const audioBuffer = await readFile(audioPath)
     
-    const transcription = await openai.audio.transcriptions.create({
-      file: audioFile,
-      model: 'whisper-1',
-      language: 'it',
-      response_format: 'text',
-    })
+    // Transcribe with Deepgram Nova-2 (best quality, multilingual)
+    const { result, error } = await deepgram.listen.prerecorded.transcribeFile(
+      audioBuffer,
+      {
+        model: 'nova-2',
+        smart_format: true,
+        punctuate: true,
+        paragraphs: true,
+        diarize: true, // Speaker detection
+        language: 'it', // Italian
+      }
+    )
 
-    return transcription
+    if (error) {
+      throw new Error(`Deepgram error: ${error.message}`)
+    }
+
+    // Extract transcript from result
+    const transcript = result.results?.channels[0]?.alternatives[0]?.transcript
+
+    if (!transcript) {
+      throw new Error('Nessuna trascrizione generata')
+    }
+
+    return transcript
   } catch (error: any) {
+    console.error('Deepgram transcription error:', error)
     throw new Error(`Errore trascrizione: ${error.message}`)
   }
 }
@@ -214,5 +236,3 @@ FORMATO OUTPUT:
     throw new Error(`Errore generazione articolo: ${error.message}`)
   }
 }
-
-// Helper function for usage increment (will be created as SQL function)
