@@ -243,3 +243,4 @@ Per domande: [your-email@example.com]
 
 **Status:** MVP Day 1-2 ✅ (Setup + Auth + Database)  
 **Next:** Day 3-4 (Upload + AI Processing)
+# Testing hook
