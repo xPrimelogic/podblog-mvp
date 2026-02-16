@@ -76,7 +76,9 @@ export class WordPressClient {
   ): Promise<number> {
     try {
       const formData = new FormData();
-      const blob = new Blob([imageBuffer], { type: 'image/png' });
+      // Convert Buffer to Uint8Array for proper Blob creation
+      const uint8Array = new Uint8Array(imageBuffer);
+      const blob = new Blob([uint8Array], { type: 'image/png' });
       formData.append('file', blob, filename);
 
       const response = await fetch(`${this.baseUrl}/media`, {

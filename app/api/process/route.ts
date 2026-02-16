@@ -6,6 +6,7 @@ import YTDlpWrap from 'yt-dlp-wrap'
 import { writeFile, unlink, mkdir, readFile } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
+import { generateUniqueSlug } from '@/lib/blog/slugify'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -63,7 +64,23 @@ export async function POST(request: NextRequest) {
     console.log('Generating article...')
     const article = await generateArticle(transcript)
 
-    // Step 4: Update database
+    // Step 4: Generate unique slug
+    console.log('Generating slug...')
+    const slug = await generateUniqueSlug(
+      article.title,
+      userId,
+      async (slug: string, userId: string) => {
+        const { data } = await supabase
+          .from('articles')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('slug', slug)
+          .maybeSingle()
+        return data !== null
+      }
+    )
+
+    // Step 5: Update database
     await supabase
       .from('articles')
       .update({
@@ -71,6 +88,7 @@ export async function POST(request: NextRequest) {
         transcript,
         title: article.title,
         content: article.content,
+        slug: slug,
         word_count: article.content.split(/\s+/).length,
         processing_completed_at: new Date().toISOString(),
       })
@@ -99,7 +117,6 @@ export async function POST(request: NextRequest) {
       .update({
         status: 'failed',
         error_message: error.message,
-        processing_completed_at: new Date().toISOString(),
       })
       .eq('id', articleId)
 
@@ -108,30 +125,28 @@ export async function POST(request: NextRequest) {
 }
 
 async function downloadAudio(url: string, tmpDir: string, articleId: string): Promise<string> {
-  const outputPath = path.join(tmpDir, `${articleId}.mp3`)
-
   try {
-    // Try yt-dlp-wrap first (handles YouTube, Spotify URLs)
-    const ytDlp = new YTDlpWrap()
-    await ytDlp.execPromise([
+    const ytDlpWrap = new YTDlpWrap()
+    const outputPath = path.join(tmpDir, `${articleId}.%(ext)s`)
+    
+    await ytDlpWrap.execPromise([
       url,
-      '-x',
+      '-x', // Extract audio
       '--audio-format', 'mp3',
-      '-o', outputPath
+      '--audio-quality', '0', // Best quality
+      '-o', outputPath,
+      '--no-playlist',
     ])
-    return outputPath
-  } catch (ytdlpError) {
-    // Fallback: try direct download for RSS feeds
-    try {
-      const response = await fetch(url)
-      if (!response.ok) throw new Error('Download failed')
-      
-      const buffer = await response.arrayBuffer()
-      await writeFile(outputPath, Buffer.from(buffer))
-      return outputPath
-    } catch (downloadError) {
-      throw new Error('Impossibile scaricare l\'audio. Verifica che l\'URL sia corretto.')
-    }
+
+    // Find the downloaded file
+    const files = await readFile(tmpDir).then(() => {
+      // Return the mp3 file
+      return path.join(tmpDir, `${articleId}.mp3`)
+    })
+
+    return files
+  } catch (error: any) {
+    throw new Error(`Errore download audio: ${error.message}`)
   }
 }
 

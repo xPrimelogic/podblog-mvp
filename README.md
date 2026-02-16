@@ -105,3 +105,31 @@ Proprietary - PodBlog AI
 **Status:** ✅ MVP Complete  
 **Version:** 1.0.0  
 **Last Update:** 2026-02-16
+
+## 📝 Blog Hosting
+
+Every user gets a public blog at `/blog/username`:
+
+### Features
+- SEO-optimized article pages
+- Automatic slug generation from titles
+- Public/private toggle per article
+- Author bio and avatar
+- Responsive mobile-first design
+- Social share buttons
+
+### URLs
+- **Blog home:** `https://podblog-mvp.vercel.app/blog/username`
+- **Single article:** `https://podblog-mvp.vercel.app/blog/username/article-slug`
+
+### Settings
+Dashboard → Settings → Blog:
+- Edit username (unique)
+- Update bio
+- Upload avatar
+- Toggle blog visibility
+
+### Auto-publish
+Articles are **draft by default**. Publish from:
+- Dashboard article view → "Publish" button
+- Or via WordPress integration

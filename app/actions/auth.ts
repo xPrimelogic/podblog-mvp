@@ -1,52 +1,109 @@
 'use server'
 
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server';
+import { generateUniqueUsername } from '@/lib/blog/slugify';
 
-export async function loginAction(formData: FormData) {
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
+export async function generateUsername(email: string): Promise<string> {
+  const supabase = await createClient();
+  
+  const checkExists = async (username: string): Promise<boolean> => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('username', username)
+      .maybeSingle();
+    
+    return !error && data !== null;
+  };
+  
+  return generateUniqueUsername(email, checkExists);
+}
 
-  if (!email || !password) {
-    return { error: 'Email e password sono richiesti' }
+export async function checkUsernameAvailability(username: string): Promise<boolean> {
+  const supabase = await createClient();
+  
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('username', username)
+    .maybeSingle();
+  
+  return error || data === null;
+}
+
+export async function updateUserProfile(userId: string, updates: {
+  username?: string;
+  bio?: string;
+  avatar_url?: string;
+  blog_visibility?: 'public' | 'private';
+}): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  
+  const { error } = await supabase
+    .from('profiles')
+    .update(updates)
+    .eq('id', userId);
+  
+  if (error) {
+    return { success: false, error: error.message };
   }
+  
+  return { success: true };
+}
 
-  const cookieStore = await cookies()
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-        set(name: string, value: string, options: any) {
-          cookieStore.set(name, value, options)
-        },
-        remove(name: string, options: any) {
-          cookieStore.delete(name)
-        },
-      },
-    }
-  )
-
+export async function loginAction(formData: FormData): Promise<{ success?: boolean; error?: string }> {
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+  
+  const supabase = await createClient();
+  
   const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
-  })
-
+  });
+  
   if (error) {
-    if (error.message.includes('Invalid login credentials')) {
-      return { error: 'Email o password non corretti' }
-    }
-    if (error.message.includes('Email not confirmed')) {
-      return { error: 'Email non confermata' }
-    }
-    return { error: error.message }
+    return { error: error.message };
   }
+  
+  return { success: true };
+}
 
-  // Redirect happens server-side with cookies already set
-  redirect('/dashboard')
+export async function signupAction(formData: FormData): Promise<{ success?: boolean; error?: string }> {
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+  const name = formData.get('name') as string;
+  
+  const supabase = await createClient();
+  
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: name,
+      },
+    },
+  });
+  
+  if (authError) {
+    return { error: authError.message };
+  }
+  
+  if (!authData.user) {
+    return { error: 'Failed to create user' };
+  }
+  
+  const username = await generateUsername(email);
+  
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update({ username, full_name: name })
+    .eq('id', authData.user.id);
+  
+  if (profileError) {
+    console.error('Profile update failed:', profileError);
+  }
+  
+  return { success: true };
 }

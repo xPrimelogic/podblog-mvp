@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
+import { generateUsername } from '@/app/actions/auth'
 
 export default function SignupPage() {
   const [email, setEmail] = useState('')
@@ -27,12 +28,17 @@ export default function SignupPage() {
     console.log('📝 Attempting signup for:', email)
 
     try {
+      // Generate unique username
+      const username = await generateUsername(email)
+      console.log('✨ Generated username:', username)
+      
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: fullName,
+            username: username,
           },
           emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
         },
@@ -53,10 +59,40 @@ export default function SignupPage() {
       } else if (data.session) {
         // Auto-signed in (email confirmation disabled in Supabase settings)
         console.log('✅ Auto-signed in (no email confirmation required)')
+        
+        // Create/update profile with username
+        if (data.user) {
+          await supabase
+            .from('profiles')
+            .upsert({
+              id: data.user.id,
+              email: email,
+              full_name: fullName,
+              username: username,
+              blog_visibility: 'public',
+            })
+            .eq('id', data.user.id)
+        }
+        
         window.location.href = '/dashboard'
       } else {
-        // Email confirmation required
+        // Email confirmation required - update profile after confirmation
         console.log('✅ Signup successful, email confirmation required')
+        
+        if (data.user) {
+          // Create profile with username (will be completed after email confirmation)
+          await supabase
+            .from('profiles')
+            .upsert({
+              id: data.user.id,
+              email: email,
+              full_name: fullName,
+              username: username,
+              blog_visibility: 'public',
+            })
+            .eq('id', data.user.id)
+        }
+        
         setSuccess(true)
         setLoading(false)
       }
