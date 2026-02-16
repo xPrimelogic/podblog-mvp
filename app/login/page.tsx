@@ -1,98 +1,46 @@
 'use client'
 
-import { Suspense } from 'react'
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useState, useTransition } from 'react'
+import { loginAction } from '@/app/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 
 function LoginForm() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [isPending, startTransition] = useTransition()
   const [error, setError] = useState('')
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const supabase = createClient()
 
-  // Check for errors from callback
-  useEffect(() => {
-    const errorParam = searchParams.get('error')
-    if (errorParam) {
-      setError(decodeURIComponent(errorParam))
-    }
-  }, [searchParams])
-
-  // REMOVED: Client-side "already logged in" check that caused infinite loop
-  // Server-side middleware and dashboard will handle auth checks
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setLoading(true)
-    setError('')
-
-    console.log('🔐 Attempting login for:', email)
-
-    try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (signInError) {
-        console.error('❌ Login error:', signInError.message)
-        
-        // User-friendly error messages
-        if (signInError.message.includes('Invalid login credentials')) {
-          setError('Email o password non corretti. Riprova.')
-        } else if (signInError.message.includes('Email not confirmed')) {
-          setError('Email non confermata. Controlla la tua casella di posta.')
-        } else {
-          setError(signInError.message)
+    const formData = new FormData(e.currentTarget)
+    
+    startTransition(async () => {
+      try {
+        const result = await loginAction(formData)
+        if (result?.error) {
+          setError(result.error)
         }
-        setLoading(false)
-        return
+        // Se nessun errore, redirect automatico da Server Action
+      } catch (err) {
+        setError('Errore imprevisto. Riprova.')
       }
-
-      if (data.session) {
-        console.log('✅ Login successful for:', data.user?.email)
-        console.log('🔑 Session created, redirecting...')
-        
-        // Small delay to ensure cookies are fully written
-        await new Promise(resolve => setTimeout(resolve, 100))
-        
-        // Force full page reload to ensure middleware sees new session cookies
-        // router.push() doesn't guarantee cookie sync between client and server middleware
-        window.location.href = '/dashboard'
-      } else {
-        console.warn('⚠️ Login succeeded but no session returned')
-        setError('Login riuscito ma sessione non creata. Contatta il supporto.')
-        setLoading(false)
-      }
-    } catch (err) {
-      console.error('❌ Unexpected error during login:', err)
-      setError('Errore imprevisto. Riprova.')
-      setLoading(false)
-    }
+    })
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
       <Card className="w-full max-w-md p-8">
         <h1 className="text-2xl font-bold mb-6">Login - PodBlog AI</h1>
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
+              name="email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               required
-              disabled={loading}
+              disabled={isPending}
               autoComplete="email"
             />
           </div>
@@ -100,11 +48,10 @@ function LoginForm() {
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
+              name="password"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               required
-              disabled={loading}
+              disabled={isPending}
               autoComplete="current-password"
             />
           </div>
@@ -113,8 +60,8 @@ function LoginForm() {
               <p className="text-red-700 text-sm font-medium">⚠️ {error}</p>
             </div>
           )}
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? '🔄 Login in corso...' : '🔐 Accedi'}
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending ? '🔄 Login in corso...' : '🔐 Accedi'}
           </Button>
         </form>
         <p className="mt-4 text-center text-sm">
