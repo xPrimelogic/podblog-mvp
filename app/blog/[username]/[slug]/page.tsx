@@ -9,7 +9,7 @@ interface ArticlePageProps {
 
 export async function generateMetadata({ params }: ArticlePageProps) {
   const { username, slug } = await params;
-  const supabase = createClient();
+  const supabase = await createClient();
   
   const { data: profile } = await supabase
     .from('profiles')
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { username, slug } = await params;
-  const supabase = createClient();
+  const supabase = await createClient();
   
   // Get profile
   const { data: profile, error: profileError } = await supabase

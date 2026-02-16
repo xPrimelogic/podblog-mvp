@@ -28,3 +28,6 @@ export async function createClient() {
 
   return supabase
 }
+
+// Alias for consistency with imports
+export const createServerClient = createClient;

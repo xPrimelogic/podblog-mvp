@@ -28,7 +28,7 @@ export async function checkUsernameAvailability(username: string): Promise<boole
     .eq('username', username)
     .maybeSingle();
   
-  return error || data === null;
+  return !!error || data === null;
 }
 
 export async function updateUserProfile(userId: string, updates: {

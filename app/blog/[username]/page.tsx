@@ -9,11 +9,11 @@ interface BlogPageProps {
 
 export async function generateMetadata({ params }: BlogPageProps) {
   const { username } = await params;
-  const supabase = createClient();
+  const supabase = await createClient();
   
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, bio')
+    .select('id, full_name, bio')
     .eq('username', username)
     .eq('blog_visibility', 'public')
     .single();
@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: BlogPageProps) {
 
 export default async function BlogPage({ params }: BlogPageProps) {
   const { username } = await params;
-  const supabase = createClient();
+  const supabase = await createClient();
   
   // Get profile
   const { data: profile, error: profileError } = await supabase
