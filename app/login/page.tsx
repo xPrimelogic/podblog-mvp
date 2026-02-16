@@ -61,9 +61,9 @@ function LoginForm() {
         console.log('✅ Login successful for:', data.user?.email)
         console.log('🔑 Session created, redirecting...')
         
-        // Use router.push instead of window.location.href for better UX
-        router.push('/dashboard')
-        router.refresh() // Force refresh to update server components
+        // Force full page reload to ensure middleware sees new session cookies
+        // router.push() doesn't guarantee cookie sync between client and server middleware
+        window.location.href = '/dashboard'
       } else {
         console.warn('⚠️ Login succeeded but no session returned')
         setError('Login riuscito ma sessione non creata. Contatta il supporto.')
