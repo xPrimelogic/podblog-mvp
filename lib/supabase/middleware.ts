@@ -55,8 +55,8 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Refresh session if expired - this will refresh the token if needed
-  const { data: { session }, error } = await supabase.auth.getSession()
+  // Verify user authentication - recommended over getSession()
+  const { data: { user }, error } = await supabase.auth.getUser()
 
   const isAuthPage = request.nextUrl.pathname.startsWith('/login') || 
                      request.nextUrl.pathname.startsWith('/signup') ||
@@ -71,13 +71,13 @@ export async function middleware(request: NextRequest) {
                          (request.nextUrl.pathname.startsWith('/api') && !isPublicApiRoute))
 
   // Redirect logic
-  if (isProtectedPage && !session) {
-    // Protected page without session -> redirect to login
+  if (isProtectedPage && !user) {
+    // Protected page without user -> redirect to login
     const redirectUrl = new URL('/login', request.url)
     return NextResponse.redirect(redirectUrl)
   }
 
-  if (isAuthPage && session && request.nextUrl.pathname !== '/auth/callback') {
+  if (isAuthPage && user && request.nextUrl.pathname !== '/auth/callback') {
     // Already logged in, trying to access login/signup -> redirect to dashboard
     const redirectUrl = new URL('/dashboard', request.url)
     return NextResponse.redirect(redirectUrl)
