@@ -61,6 +61,9 @@ function LoginForm() {
         console.log('✅ Login successful for:', data.user?.email)
         console.log('🔑 Session created, redirecting...')
         
+        // Small delay to ensure cookies are fully written
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
         // Force full page reload to ensure middleware sees new session cookies
         // router.push() doesn't guarantee cookie sync between client and server middleware
         window.location.href = '/dashboard'
