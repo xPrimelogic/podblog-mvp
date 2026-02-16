@@ -65,7 +65,8 @@ export async function middleware(request: NextRequest) {
   // Exclude public API routes from protection
   const isPublicApiRoute = request.nextUrl.pathname.startsWith('/api/auth/') ||
                            request.nextUrl.pathname === '/api/protected' ||
-                           request.nextUrl.pathname.startsWith('/api/waitlist')
+                           request.nextUrl.pathname.startsWith('/api/waitlist') ||
+                           request.nextUrl.pathname.startsWith('/api/test-processing') // ✅ FIX: Allow test endpoint
   
   const isProtectedPage = (request.nextUrl.pathname.startsWith('/dashboard') ||
                          (request.nextUrl.pathname.startsWith('/api') && !isPublicApiRoute))
