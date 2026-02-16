@@ -3,6 +3,11 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // 🚀 BYPASS: test-processing endpoint (no auth required)
+  if (request.nextUrl.pathname.startsWith('/api/test-processing')) {
+    return NextResponse.next()
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -61,11 +66,9 @@ export async function middleware(request: NextRequest) {
                      request.nextUrl.pathname.startsWith('/signup') ||
                      request.nextUrl.pathname.startsWith('/auth/callback')
   
-  // ✅ FIXED: Include /api/test-processing in public routes
   const isPublicApiRoute = request.nextUrl.pathname.startsWith('/api/auth/') ||
                            request.nextUrl.pathname === '/api/protected' ||
-                           request.nextUrl.pathname.startsWith('/api/waitlist') ||
-                           request.nextUrl.pathname.startsWith('/api/test-processing')
+                           request.nextUrl.pathname.startsWith('/api/waitlist')
   
   const isProtectedPage = (request.nextUrl.pathname.startsWith('/dashboard') ||
                          (request.nextUrl.pathname.startsWith('/api') && !isPublicApiRoute))
