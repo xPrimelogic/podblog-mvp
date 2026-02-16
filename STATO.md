@@ -1,6 +1,6 @@
 # PodBlog MVP - Stato Progetto
 
-## Ultima modifica: 2026-02-16 17:02 UTC
+## Ultima modifica: 2026-02-16 19:48 UTC
 
 ---
 
@@ -9,7 +9,7 @@
 **Versione:** MVP Landing + Backend
 **Deploy:** https://podblog-mvp.vercel.app
 **Repository:** `/home/node/projects/podblog-mvp`
-**Status:** 🔴 **BLOCCATO** su auth redirect
+**Status:** 🟡 **AUTH DISABILITATO** - test feature core in corso
 
 ---
 
@@ -19,48 +19,53 @@
 - ✅ Merge podblog-ai + podblog-mvp
 - ✅ ROI Calculator interattivo
 - ✅ Design system coerente (blue→purple gradient)
-- ✅ Backend API routes intatti
 - ✅ 615 righe landing page completa
-- Commit: merge landing pages
 
 ### 2. Fix SEO (16 Feb 16:44 UTC)
 - ✅ Meta tags custom (title, description)
-- ✅ JSON-LD Structured Data (SoftwareApplication + 3 Offers)
+- ✅ JSON-LD Structured Data
 - ✅ Open Graph + Twitter cards
 - ✅ Favicon custom (gradient blu→purple)
-- ✅ ROI calculator: rimossa % ridondante
-- Commit: `b6644f7` - SEO meta tags
 
 ### 3. Scout Report (16 Feb 16:40 UTC)
 - ✅ Voto: 7.8/10 (→ target 9.5+)
-- ✅ SEO fix applicati → atteso nuovo voto post-deploy
-- Lighthouse: 96/100 (Performance 97, SEO 100, Best Practices 100)
+- ✅ Lighthouse: 96/100
+
+### 4. Database Supabase
+- ✅ 4 tabelle operative (profiles, articles, subscriptions, usage)
+- ✅ Test account: test-e2e@podblog.ai (verified)
+
+### 5. Auth Disabilitato (16 Feb 19:18 UTC)
+- ✅ Dopo 6 tentativi falliti, auth rimosso temporaneamente
+- ✅ Dashboard accessibile direttamente senza login
+- ✅ Banner warning "Testing Mode" visibile
+
+### 6. Analisi Costi + Piano Ottimizzazione (16 Feb 19:42 UTC)
+- ✅ Opus analysis: root cause $50 sforamento
+- ✅ Piano implementato: batch spawn, 2-strike rule, compaction 50k
+- ✅ SOUL.md aggiornato con regole budget
+- ✅ Cost tracking attivo: `memory/costs-YYYY-MM-DD.json`
 
 ---
 
-## 🔴 BLOCCATO - Auth Redirect Issue
+## 🟡 IN PROGRESS
 
-**Problema critico:** Login Supabase funziona ma redirect a dashboard fallisce.
+### Test E2E Feature Core (PROSSIMO)
+- ⏳ Upload YouTube
+- ⏳ Deepgram transcription
+- ⏳ GPT-4 content generation
+- ⏳ Stripe checkout
+- ⏳ Mobile responsive
 
-### Tentativi Falliti
-1. ❌ `router.push('/dashboard')` + `router.refresh()` → no redirect
-2. ❌ `window.location.href = '/dashboard'` → no redirect (commit `300a4c5`)
+---
 
-### Sintomi
-- Console: "✅ Login successful" + "🔑 Session created, redirecting..."
-- Pagina: rimane bloccata su `/login` con loading state
-- Navigazione diretta a `/dashboard` → redirect a `/login`
-- Session non persiste tra page reload
+## 🔴 BLOCCATO / DIFFERITO
 
-### Test E2E Status
-- **0/9 funzionalità testate**
-- Blocco totale al login (step 1)
-- Report: `TEST_E2E_FINAL_REPORT.md`
-
-### Azione Corrente
-- ⏳ Opus sta analizzando per soluzione definitiva (run: 0857762c)
-- File output: `AUTH_FIX_OPUS_FINAL.md`
-- Timeout: 10 minuti
+### Auth Redirect Bug
+- ❌ 6 tentativi falliti (8 ore, $43 spesi)
+- ❌ Root cause: conflitto pacchetti Supabase + middleware issues
+- 🟡 **SOLUZIONE:** Auth disabilitato temporaneamente per test feature
+- 📅 **DIFFERITO:** Risoluzione auth a completamento test core
 
 ---
 
@@ -71,33 +76,30 @@
 ├── app/
 │   ├── page.tsx                  # Landing (615 righe, ROI calc)
 │   ├── layout.tsx                # Meta tags SEO + JSON-LD
-│   ├── login/page.tsx            # 🔴 PROBLEMA: redirect non funziona
-│   ├── signup/page.tsx
+│   ├── login/page.tsx            # ⚠️ Auth disabilitato
+│   ├── signup/page.tsx           # ⚠️ Auth disabilitato
 │   ├── dashboard/
-│   │   ├── page.tsx
-│   │   ├── layout.tsx
+│   │   ├── page.tsx              # ✅ Accessibile senza auth
+│   │   ├── layout.tsx            # ⚠️ Auth check rimosso
 │   │   └── article/[id]/page.tsx
+│   ├── actions/
+│   │   └── auth.ts               # Server Action (non usato)
 │   └── api/
 │       ├── upload/route.ts       # Upload episodi
 │       ├── process/route.ts      # Deepgram + GPT-4 pipeline
-│       ├── article/[id]/route.ts
-│       ├── create-checkout/route.ts  # Geo-pricing Stripe
-│       └── auth/
-│           ├── login/route.ts
-│           └── register/route.ts
+│       └── create-checkout/route.ts  # Geo-pricing Stripe
 ├── lib/
 │   ├── supabase/
-│   │   ├── client.ts
+│   │   ├── client.ts             # createBrowserClient (SSR)
 │   │   ├── server.ts
-│   │   └── middleware.ts         # 🔴 Auth middleware
+│   │   └── middleware.ts         # ⚠️ Disabilitato (matcher: [])
 │   └── geo-pricing.ts            # Multi-region Stripe
 ├── public/
 │   ├── favicon.svg               # ✅ Custom icon
 │   └── og-image.png              # ✅ OG image 1200x630
 ├── STATO.md                      # Questo file
-├── TEST_E2E_REPORT.md            # Primo test (bloccato email verification)
-├── TEST_E2E_FINAL_REPORT.md      # Secondo test (bloccato auth redirect)
-└── AUTH_FIX_OPUS_FINAL.md        # ⏳ In creazione da Opus
+├── COST_ANALYSIS_OPUS.md         # Analisi costi dettagliata
+└── TEST_E2E_*.md                 # Report test (tutti falliti su auth)
 ```
 
 ---
@@ -106,138 +108,96 @@
 
 ### Environment Variables (Vercel)
 - ✅ NEXT_PUBLIC_SUPABASE_URL
-- ✅ NEXT_PUBLIC_SUPABASE_ANON_KEY
 - ✅ SUPABASE_SERVICE_ROLE_KEY
 - ✅ OPENAI_API_KEY
 - ✅ DEEPGRAM_API_KEY
 - ✅ STRIPE_SECRET_KEY
-- ✅ STRIPE_PRICE_EUROPA_{STARTER,CREATOR,PRO}
-- ✅ STRIPE_PRICE_USA_UK_{STARTER,CREATOR,PRO}
-- ✅ STRIPE_PRICE_LATAM_{STARTER,CREATOR,PRO}
-- ✅ JWT_SECRET
-- ✅ NEXT_PUBLIC_APP_URL
-
-### Database Supabase
-- ✅ Tabelle: profiles, articles, subscriptions, usage
-- ✅ RLS policies configurate
-- ✅ Auth policies attive
-- ✅ Test account: test-e2e@podblog.ai (verified)
+- ✅ 9 Stripe price IDs (EUR/USD/LATAM)
 
 ---
 
 ## 📊 METRICHE
 
-### Costi AI (stimati oggi)
-- Builder tasks: ~50k token Sonnet = €0.15
-- Scout report: ~200k token Haiku = €0.05
-- Operator test E2E: ~400k token Haiku = €0.10
-- Opus analysis (in corso): ~30k token = €0.45
-- **Totale giornaliero:** ~€0.75 / €10 budget
+### Costi AI
+- **Oggi:** $50 ($43 Sonnet + $3.4 Opus + $3.5 Haiku)
+- **Budget:** $11/giorno
+- **Sforamento:** 5x (500%)
+- **Target domani:** $11 con ottimizzazioni (-78%)
 
 ### Performance
 - Lighthouse: 96/100
-- Performance: 97/100
 - SEO: 100/100
-- Best Practices: 100/100
 - Accessibility: 87/100
-
-### Deploy
-- URL: https://podblog-mvp.vercel.app
-- Build time: ~22s
-- Deploy time: ~40s
-- Auto-deploy: ✅ On push to main
 
 ---
 
 ## 🎯 PROSSIMI STEP
 
-### Priorità 1: Fix Auth Redirect (CRITICO)
-1. ⏳ Attendere soluzione Opus
-2. Implementare fix con Builder (Sonnet)
-3. Deploy su Vercel
-4. Re-test E2E completo (9 step)
+### Priorità 1: Test E2E Feature Core (DOMANI)
+1. Upload YouTube (19s video test)
+2. Verifica Deepgram transcription
+3. Verifica GPT-4 article generation
+4. Test Stripe checkout
+5. Mobile responsive check
 
-### Priorità 2: Completare Test E2E
-Una volta risolto auth:
-- Upload YouTube (19s video)
-- Verifica trascrizione Deepgram
-- Verifica articolo GPT-4 (>500 parole)
-- Test bottoni copia
-- Test Stripe checkout (no payment)
-- Mobile responsive 375px
+**Budget max:** $5 (1 spawn Operator Haiku)
 
-### Priorità 3: Scout Re-test
-Dopo fix SEO + test E2E OK:
-- Lanciare Scout per nuovo voto
+### Priorità 2: Fix Auth (DOPO test core)
+**Opzioni:**
+- A) Switch a Clerk ($25/mese)
+- B) Downgrade Next.js 15.x
+- C) Riscrivere auth custom
+
+**Decisione:** Biso dopo vedere MVP funzionante
+
+### Priorità 3: Scout Re-test (SE MVP OK)
+- Lanciare Scout per nuovo voto post-fix SEO
 - Target: >= 9.5/10
-- Se >= 9.5: progetto approvato per launch
-
-### Priorità 4: Miglioramenti Post-Launch
-- Testimonials section (3-5 quote reali)
-- FAQ visibile on-page
-- Blog demo link funzionante
-- Accessibility 90+ (contrast fix)
 
 ---
 
 ## ⚠️ ISSUE NOTI
 
 ### 🔴 CRITICO
-1. **Auth redirect non funziona**
-   - Severity: BLOCCO TOTALE
-   - Impact: Utenti non possono accedere
-   - Status: In analisi Opus
-   - ETA fix: 10-15 minuti
+**Auth non funziona** - Disabilitato temporaneamente
 
 ### 🟡 MEDIO
-2. **Scout voto 7.8/10 (pre-fix SEO)**
-   - SEO fix applicati, atteso nuovo voto
-   - Target: 9.5+/10
+**Scout voto 7.8/10** - SEO fix applicati, atteso nuovo voto
 
-3. **Accessibility 87/100**
-   - Contrast ratio text/zinc-600
-   - Fix post-launch
+### 🟢 RISOLTO
+**Costi fuori controllo** - Piano ottimizzazione implementato
 
-### 🟢 BASSO
-4. **Middleware deprecation warning**
-   - "middleware" file convention deprecated
-   - Next.js suggests "proxy" instead
-   - Non bloccante, fix futuro
+---
+
+## 💰 BUDGET RULES (NUOVE - 16 Feb)
+
+### Hard Limits
+- Budget: $11/giorno
+- Hard cap: STOP a $11
+- Soft cap: Conferma Biso a $8
+- Alert: Ogni $5
+
+### Regole Operative
+- **Batch spawn obbligatorio** (no 1 spawn per fix)
+- **2-Strike Rule** (stop dopo 2 retry)
+- **Compaction 50k** (non 200k)
+- **Haiku-first** (Sonnet solo per complex)
+
+### Cost Tracking
+`/home/node/.openclaw/workspace-strategist/memory/costs-YYYY-MM-DD.json`
 
 ---
 
 ## 📝 DECISIONI IMPORTANTI
 
-1. **Modelli AI:**
-   - Haiku: task semplici (Scout, Operator, check)
-   - Sonnet: SEMPRE Builder + Growth
-   - Opus: solo architettura, bug irrisolti, analisi critiche
-
-2. **Redirect strategy:**
-   - Provato router.push → fallito
-   - Provato window.location.href → fallito
-   - Prossimo: soluzione Opus (API route o Server Action?)
-
-3. **Test account:**
-   - Email verification disabilitata per test (admin.createUser)
-   - Account: test-e2e@podblog.ai
-   - Password: TestPodBlog2026!
+1. **Auth disabilitato temporaneamente** per sbloccare test feature core
+2. **Budget ottimizzato** con regole Opus: batch spawn, 2-strike, Haiku-first
+3. **Test E2E priorità** su fix auth (validare feature prima di sistemare accesso)
 
 ---
 
-## 🚀 MILESTONE COMPLETATE
-
-- ✅ Merge landing pages definitivo
-- ✅ Fix SEO completo (meta, OG, JSON-LD, favicon)
-- ✅ Deploy Vercel con tutte env vars
-- ✅ Database Supabase configurato (4 tabelle)
-- ✅ Scout report iniziale (7.8/10)
-- ✅ Lighthouse audit (96/100)
-- ⏳ Test E2E bloccato (0/9)
-- ⏳ Auth fix in corso
-
----
-
-**Ultimo aggiornamento:** 2026-02-16 17:02 UTC
-**Prossimo update:** Dopo fix Opus auth
+**Ultimo aggiornamento:** 2026-02-16 19:48 UTC
+**Prossimo update:** Dopo test E2E feature core (domani)
 **Responsabile:** Strategist (PM)
+**Budget residuo oggi:** $0 (usato $50/$11)
+**Budget domani:** $11 fresh start

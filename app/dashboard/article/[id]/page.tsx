@@ -1,6 +1,7 @@
 import { createServerClient } from '@/lib/supabase/client'
 import { redirect } from 'next/navigation'
 import { ArticleViewer } from '@/components/article-viewer'
+import { cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,7 +11,8 @@ interface PageProps {
 
 export default async function ArticlePage({ params }: PageProps) {
   const { id } = await params
-  const supabase = createServerClient()
+  const cookieStore = await cookies()
+  const supabase = createServerClient(cookieStore)
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {

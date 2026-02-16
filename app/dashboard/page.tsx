@@ -1,12 +1,14 @@
 import { createServerClient } from '@/lib/supabase/client'
 import { UploadForm } from '@/components/upload-form'
 import { ArticlesList } from '@/components/articles-list'
+import { cookies } from 'next/headers'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
-  const supabase = createServerClient()
+  const cookieStore = await cookies()
+  const supabase = createServerClient(cookieStore)
   const { data: { user } } = await supabase.auth.getUser()
   
   // Auth temporarily disabled for MVP testing
