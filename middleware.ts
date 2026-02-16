@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// Middleware disabled - auth now handled in dashboard layout
+// Middleware bypasses test-processing endpoint
 export function middleware(request: NextRequest) {
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: []  // No routes intercepted
+  matcher: [
+    '/((?!api/test-processing|_next/static|_next/image|favicon.ico).*)',
+  ]
 }
