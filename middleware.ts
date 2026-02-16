@@ -1,8 +1,4 @@
-export { middleware } from './lib/supabase/middleware'
-
+// Middleware disabled - auth now handled in dashboard layout
 export const config = {
-  matcher: [
-    '/dashboard/:path*',
-    '/api/protected/:path*',
-  ]
+  matcher: []  // No routes intercepted
 }
