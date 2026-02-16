@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// Middleware bypasses test-processing endpoint
+// NO-OP middleware - auth is layout-based
 export function middleware(request: NextRequest) {
   return NextResponse.next()
 }
 
+// EMPTY matcher = middleware never runs (complete bypass)
 export const config = {
-  matcher: [
-    '/((?!api/test-processing|_next/static|_next/image|favicon.ico).*)',
-  ]
+  matcher: []
 }
