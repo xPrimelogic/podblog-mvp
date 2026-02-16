@@ -1,7 +1,6 @@
 import { createServerClient } from '@/lib/supabase/client'
 import { UploadForm } from '@/components/upload-form'
 import { ArticlesList } from '@/components/articles-list'
-import { redirect } from 'next/navigation'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -10,43 +9,63 @@ export default async function DashboardPage() {
   const supabase = createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   
-  if (!user) {
-    redirect('/login')
-  }
+  // Auth temporarily disabled for MVP testing
+  // if (!user) {
+  //   redirect('/login')
+  // }
 
-  const { data: profile } = await supabase
+  // Mock data for testing without auth
+  const profile = user ? await supabase
     .from('profiles')
     .select('*')
-    .eq('id', user?.id)
+    .eq('id', user.id)
     .single()
+    .then(r => r.data) : null
 
-  const { data: subscription } = await supabase
+  const subscription = user ? await supabase
     .from('subscriptions')
     .select('*')
-    .eq('user_id', user?.id)
+    .eq('user_id', user.id)
     .single()
+    .then(r => r.data) : null
 
   const currentMonth = new Date().toISOString().slice(0, 7) + '-01'
-  const { data: usage } = await supabase
+  const usage = user ? await supabase
     .from('usage')
     .select('*')
-    .eq('user_id', user?.id)
+    .eq('user_id', user.id)
     .eq('period_start', currentMonth)
     .single()
+    .then(r => r.data) : null
 
-  const { data: articles } = await supabase
+  const articles = user ? await supabase
     .from('articles')
     .select('*')
-    .eq('user_id', user?.id)
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
+    .then(r => r.data) : []
 
   const hasReachedLimit = usage && usage.articles_generated >= usage.articles_limit
   const isFreeUser = subscription?.status === 'trialing' && usage?.articles_generated >= 1
 
   return (
     <div>
+      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="ml-3">
+            <p className="text-sm text-yellow-700">
+              <strong>Testing Mode:</strong> Authentication temporarily disabled. All features accessible without login.
+            </p>
+          </div>
+        </div>
+      </div>
       <h1 className="text-3xl font-bold mb-6">
-        Benvenuto, {profile?.full_name || user?.email}!
+        Benvenuto, {profile?.full_name || user?.email || 'Tester'}!
       </h1>
       
       <div className="grid md:grid-cols-3 gap-6 mb-8">
@@ -115,7 +134,7 @@ export default async function DashboardPage() {
             <p className="text-sm text-gray-600 mt-2">Il tuo limite si resetterà il prossimo mese.</p>
           </div>
         ) : (
-          <UploadForm userId={user.id} />
+          <UploadForm userId={user?.id || 'test-user'} />
         )}
       </div>
 

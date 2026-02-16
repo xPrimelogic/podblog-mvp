@@ -33,11 +33,12 @@ export default function Home() {
             <Link href="#pricing" className="text-zinc-600 hover:text-zinc-900 transition">
               Prezzi
             </Link>
+            {/* Auth temporarily disabled - direct access to /dashboard */}
             <Link
-              href="/signup"
+              href="/dashboard"
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
             >
-              Inizia Gratis
+              Accedi alla Dashboard
             </Link>
           </nav>
         </div>
@@ -58,11 +59,12 @@ export default function Home() {
               Blog SEO, post social, newsletter e altro. Tutto automatico. Risparmia <strong>8 ore a settimana</strong>.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
+              {/* Auth temporarily disabled - direct access to /dashboard */}
               <Link
-                href="/signup"
+                href="/dashboard"
                 className="bg-blue-600 text-white px-8 py-4 rounded-lg hover:bg-blue-700 transition text-lg font-medium flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
               >
-                Inizia Gratis <ArrowRight className="w-5 h-5" />
+                Accedi alla Dashboard <ArrowRight className="w-5 h-5" />
               </Link>
             </div>
             <p className="text-sm text-zinc-500 mb-8">
@@ -327,7 +329,7 @@ export default function Home() {
             description="Per provare"
             features={["1 episodio", "Tutti i 9 contenuti", "Blog hosting incluso", "Support 24h"]}
             cta="Inizia Gratis"
-            href="/signup"
+            href="/dashboard"
           />
           <PricingCard
             name="Pro"
@@ -335,7 +337,7 @@ export default function Home() {
             description="Per creator attivi"
             features={["30 episodi/mese", "Import RSS automatico", "Analytics avanzate", "Glossario personalizzato", "Rimozione watermark"]}
             cta="Prova 30 Giorni Gratis"
-            href="/signup"
+            href="/dashboard"
             highlighted
             badge="POPOLARE"
           />
@@ -344,7 +346,7 @@ export default function Home() {
             description="Per podcast network"
             features={["100 episodi/mese", "Multi-utente (5 account)", "Webhook custom", "White-label disponibile", "Supporto prioritario"]}
             cta="Inizia Gratis"
-            href="/signup"
+            href="/dashboard"
           />
         </div>
         <p className="text-center text-zinc-500 mt-12 text-sm">
@@ -363,11 +365,12 @@ export default function Home() {
             <p className="text-xl mb-8 opacity-90">
               Unisciti a 245+ podcaster che hanno automatizzato la creazione di contenuti
             </p>
+            {/* Auth temporarily disabled - direct access to /dashboard */}
             <Link
-              href="/signup"
+              href="/dashboard"
               className="inline-flex items-center gap-2 bg-white text-blue-600 px-8 py-4 rounded-lg hover:bg-zinc-100 transition text-lg font-semibold shadow-lg hover:shadow-xl"
             >
-              Inizia Gratis Ora <ArrowRight className="w-5 h-5" />
+              Accedi alla Dashboard <ArrowRight className="w-5 h-5" />
             </Link>
             <p className="text-sm mt-4 opacity-75">
               1 episodio gratis • No carta di credito • Attivo in 2 minuti
@@ -487,8 +490,9 @@ function InteractiveCalculator() {
           </div>
           
           <div className="mt-6 text-center">
+            {/* Auth temporarily disabled - direct access to /dashboard */}
             <Link 
-              href="/signup"
+              href="/dashboard"
               className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
             >
               Inizia a risparmiare <ArrowRight className="w-5 h-5" />
