@@ -1,33 +1,26 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createServerClient as createSupabaseServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
 export async function createClient() {
   const cookieStore = await cookies()
-  
-  // For API routes, use service role key for admin operations
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  
-  const supabase = createSupabaseClient(supabaseUrl, supabaseKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
+
+  return createSupabaseServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+        set(name: string, value: string, options: any) {
+          cookieStore.set({ name, value, ...options })
+        },
+        remove(name: string, options: any) {
+          cookieStore.set({ name, value: '', ...options })
+        },
+      },
     }
-  })
-
-  // Get auth token from cookies
-  const authToken = cookieStore.get('sb-access-token')?.value
-  
-  if (authToken) {
-    // Set the auth token for this request
-    supabase.auth.setSession({
-      access_token: authToken,
-      refresh_token: cookieStore.get('sb-refresh-token')?.value || ''
-    })
-  }
-
-  return supabase
+  )
 }
 
-// Alias for consistency with imports
-export const createServerClient = createClient;
+export const createServerClient = createClient

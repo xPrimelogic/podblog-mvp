@@ -1,41 +1,41 @@
-import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-
-// Share the same in-memory storage with register
-// Note: In production, use a database
-const users = new Map<string, { username: string; password: string }>();
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
   try {
-    const { username, password } = await request.json();
-    
-    if (!username || !password) {
+    const { email, password } = await request.json()
+
+    if (!email || !password) {
       return NextResponse.json(
-        { error: 'Username and password required' },
+        { error: 'Email and password required' },
         { status: 400 }
-      );
+      )
     }
 
-    const user = users.get(username);
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    const supabase = await createServerClient()
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (error) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        { error: error.message },
         { status: 401 }
-      );
+      )
     }
-    
-    const token = jwt.sign(
-      { username },
-      process.env.JWT_SECRET || 'fallback-secret',
-      { expiresIn: '24h' }
-    );
-    
-    return NextResponse.json({ token });
+
+    // Session is automatically saved to cookies by @supabase/ssr
+    return NextResponse.json({
+      user: data.user,
+      session: data.session,
+    })
   } catch (error) {
+    console.error('Login error:', error)
     return NextResponse.json(
       { error: 'Login failed' },
       { status: 500 }
-    );
+    )
   }
 }
