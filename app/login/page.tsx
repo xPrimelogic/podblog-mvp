@@ -9,8 +9,8 @@ import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  'https://jhdrsyqayqoumvbukjps.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpoZHJzeXFheXFvdW12YnVranBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwNjg0NTAsImV4cCI6MjA4NjY0NDQ1MH0.AXiK6YLZ7Z26L_8p4deiDMBI-r5s2c2jspcda3O58mQ'
 )
 
 export default function LoginPage() {
