@@ -1,13 +1,24 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
-import { generateUsername, signupAction } from '@/app/actions/auth'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+// Simple username generator (client-side, no server calls)
+function generateUsernameFromEmail(email: string): string {
+  const base = email.split('@')[0].replace(/[^a-z0-9]/g, '').toLowerCase()
+  const timestamp = Date.now().toString().slice(-4)
+  return `${base}${timestamp}`
+}
 
 export default function SignupPage() {
   const [email, setEmail] = useState('')
@@ -17,7 +28,6 @@ export default function SignupPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -28,10 +38,10 @@ export default function SignupPage() {
     console.log('📝 Attempting signup for:', email)
 
     try {
-      // Generate unique username
-      const username = await generateUsername(email)
+      // Generate unique username (client-side)
+      const username = generateUsernameFromEmail(email)
       console.log('✨ Generated username:', username)
-      
+
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -59,7 +69,7 @@ export default function SignupPage() {
       } else if (data.session) {
         // Auto-signed in (email confirmation disabled in Supabase settings)
         console.log('✅ Auto-signed in (no email confirmation required)')
-        
+
         // Create/update profile with username
         if (data.user) {
           await supabase
@@ -73,12 +83,12 @@ export default function SignupPage() {
             })
             .eq('id', data.user.id)
         }
-        
+
         window.location.href = '/dashboard'
       } else {
         // Email confirmation required - update profile after confirmation
         console.log('✅ Signup successful, email confirmation required')
-        
+
         if (data.user) {
           // Create profile with username (will be completed after email confirmation)
           await supabase
@@ -92,7 +102,7 @@ export default function SignupPage() {
             })
             .eq('id', data.user.id)
         }
-        
+
         setSuccess(true)
         setLoading(false)
       }

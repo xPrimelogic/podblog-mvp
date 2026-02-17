@@ -1,45 +1,43 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 
-function LoginForm() {
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+export default function LoginPage() {
   const router = useRouter()
-  const [isPending, setIsPending] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setIsPending(true)
+    setLoading(true)
     setError('')
 
-    try {
-      const formData = new FormData(e.currentTarget)
-      const email = formData.get('email') as string
-      const password = formData.get('password') as string
+    const formData = new FormData(e.currentTarget)
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
 
-      const res = await fetch('/api/auth/signin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      })
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
 
-      const data = await res.json()
-
-      if (data.error) {
-        setError(data.error)
-      } else if (data.user) {
-        router.refresh()
-        router.push('/dashboard')
-      }
-    } catch (err) {
-      setError('Errore imprevisto. Riprova.')
-    } finally {
-      setIsPending(false)
+    if (authError) {
+      setError(authError.message)
+      setLoading(false)
+    } else {
+      router.push('/dashboard')
+      router.refresh()
     }
   }
 
@@ -55,7 +53,7 @@ function LoginForm() {
               name="email"
               type="email"
               required
-              disabled={isPending}
+              disabled={loading}
               autoComplete="email"
             />
           </div>
@@ -66,7 +64,7 @@ function LoginForm() {
               name="password"
               type="password"
               required
-              disabled={isPending}
+              disabled={loading}
               autoComplete="current-password"
             />
           </div>
@@ -75,8 +73,8 @@ function LoginForm() {
               <p className="text-red-700 text-sm font-medium">⚠️ {error}</p>
             </div>
           )}
-          <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? '🔄 Login in corso...' : '🔐 Accedi'}
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? '🔄 Login in corso...' : '🔐 Accedi'}
           </Button>
         </form>
         <p className="mt-4 text-center text-sm">
@@ -87,20 +85,5 @@ function LoginForm() {
         </p>
       </Card>
     </div>
-  )
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Caricamento...</p>
-        </div>
-      </div>
-    }>
-      <LoginForm />
-    </Suspense>
   )
 }
