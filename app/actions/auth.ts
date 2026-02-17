@@ -66,6 +66,16 @@ export async function loginAction(formData: FormData): Promise<{ success?: boole
     return { error: error.message };
   }
   
+  // ✅ FIX: Wait for session to be available before returning
+  // This ensures cookies are set before client redirects
+  const { data: { user }, error: sessionError } = await supabase.auth.getUser();
+  
+  if (sessionError || !user) {
+    // Session not available yet (should not happen, but safety check)
+    console.error('⚠️ Session check failed:', sessionError);
+    return { error: 'Session verification failed' };
+  }
+  
   return { success: true };
 }
 

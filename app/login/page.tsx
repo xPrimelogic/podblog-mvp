@@ -23,8 +23,11 @@ function LoginForm() {
         if (result?.error) {
           setError(result.error)
         } else if (result?.success) {
-          router.push('/dashboard')
+          // ✅ FIX: Small delay ensures cookies are fully propagated before redirect
+          // This prevents race condition where middleware checks session before cookies arrive
+          await new Promise(resolve => setTimeout(resolve, 100))
           router.refresh()
+          router.push('/dashboard')
         }
       } catch (err) {
         setError('Errore imprevisto. Riprova.')
