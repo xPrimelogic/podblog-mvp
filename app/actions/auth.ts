@@ -2,7 +2,6 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { generateUniqueUsername } from '@/lib/blog/slugify';
-import { redirect } from 'next/navigation';
 
 export async function generateUsername(email: string): Promise<string> {
   const supabase = await createClient();
@@ -67,7 +66,7 @@ export async function loginAction(formData: FormData): Promise<{ success?: boole
     return { error: error.message };
   }
   
-  redirect('/dashboard');
+  return { success: true };
 }
 
 export async function signupAction(formData: FormData): Promise<{ success?: boolean; error?: string }> {
@@ -106,5 +105,5 @@ export async function signupAction(formData: FormData): Promise<{ success?: bool
     console.error('Profile update failed:', profileError);
   }
   
-  redirect('/dashboard');
+  return { success: true };
 }

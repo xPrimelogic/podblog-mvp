@@ -1,6 +1,7 @@
 'use client'
 
 import { Suspense, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { loginAction } from '@/app/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 
 function LoginForm() {
+  const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState('')
 
@@ -20,8 +22,10 @@ function LoginForm() {
         const result = await loginAction(formData)
         if (result?.error) {
           setError(result.error)
+        } else if (result?.success) {
+          router.push('/dashboard')
+          router.refresh()
         }
-        // Se nessun errore, redirect automatico da Server Action
       } catch (err) {
         setError('Errore imprevisto. Riprova.')
       }
