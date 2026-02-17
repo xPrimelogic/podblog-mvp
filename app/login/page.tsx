@@ -1,17 +1,11 @@
 'use client'
 
-import { createClient } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
-
-const supabase = createClient(
-  'https://jhdrsyqayqoumvbukjps.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpoZHJzeXFheXFvdW12YnVranBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwNjg0NTAsImV4cCI6MjA4NjY0NDQ1MH0.AXiK6YLZ7Z26L_8p4deiDMBI-r5s2c2jspcda3O58mQ'
-)
 
 export default function LoginPage() {
   const router = useRouter()
@@ -30,22 +24,23 @@ export default function LoginPage() {
     try {
       console.log('🔐 Attempting login for:', email)
       
-      // Add timeout to prevent hanging
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 10000)
-      
-      const { error: authError, data } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Call the backend API endpoint instead of direct Supabase client
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
       })
       
-      clearTimeout(timeoutId)
+      console.log('API response status:', response.status)
       
-      console.log('Auth response:', { error: authError, data })
+      const data = await response.json()
+      console.log('API response data:', data)
       
-      if (authError) {
-        console.error('Auth error:', authError)
-        setError(authError.message)
+      if (!response.ok) {
+        console.error('Auth error:', data.error)
+        setError(data.error || 'Login failed')
         setLoading(false)
       } else {
         console.log('✅ Login successful for:', email)
