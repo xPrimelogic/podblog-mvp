@@ -1,8 +1,7 @@
 'use client'
 
-import { Suspense, useState, useTransition } from 'react'
+import { Suspense, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { loginAction } from '@/app/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -10,29 +9,38 @@ import { Card } from '@/components/ui/card'
 
 function LoginForm() {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [isPending, setIsPending] = useState(false)
   const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const formData = new FormData(e.currentTarget)
-    
-    startTransition(async () => {
-      try {
-        const result = await loginAction(formData)
-        if (result?.error) {
-          setError(result.error)
-        } else if (result?.success) {
-          // ✅ FIX: Small delay ensures cookies are fully propagated before redirect
-          // This prevents race condition where middleware checks session before cookies arrive
-          await new Promise(resolve => setTimeout(resolve, 100))
-          router.refresh()
-          router.push('/dashboard')
-        }
-      } catch (err) {
-        setError('Errore imprevisto. Riprova.')
+    setIsPending(true)
+    setError('')
+
+    try {
+      const formData = new FormData(e.currentTarget)
+      const email = formData.get('email') as string
+      const password = formData.get('password') as string
+
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+
+      const data = await res.json()
+
+      if (data.error) {
+        setError(data.error)
+      } else if (data.user) {
+        router.refresh()
+        router.push('/dashboard')
       }
-    })
+    } catch (err) {
+      setError('Errore imprevisto. Riprova.')
+    } finally {
+      setIsPending(false)
+    }
   }
 
   return (
