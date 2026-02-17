@@ -2,6 +2,19 @@ import { createServerClient } from '@/lib/supabase/client'
 import { UploadForm } from '@/components/upload-form'
 import { ArticlesList } from '@/components/articles-list'
 import { cookies } from 'next/headers'
+import { 
+  FileText, 
+  TrendingUp, 
+  Clock,
+  AlertCircle,
+  Sparkles,
+  Zap,
+  Upload
+} from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -49,102 +62,252 @@ export default async function DashboardPage() {
 
   const hasReachedLimit = usage && usage.articles_generated >= usage.articles_limit
   const isFreeUser = subscription?.status === 'trialing' && usage?.articles_generated >= 1
+  const articlesUsed = usage?.articles_generated || 0
+  const articlesLimit = subscription?.status === 'trialing' ? 1 : (usage?.articles_limit || 12)
+  const articlesRemaining = Math.max(0, articlesLimit - articlesUsed)
+  const usagePercentage = (articlesUsed / articlesLimit) * 100
 
   return (
-    <div>
-      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <p className="text-sm text-yellow-700">
-              <strong>Testing Mode:</strong> Authentication temporarily disabled. All features accessible without login.
+    <div className="space-y-8">
+      {/* Testing Mode Banner */}
+      <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 shadow-sm">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-amber-900">
+              Testing Mode Active
+            </p>
+            <p className="text-sm text-amber-700 mt-1">
+              Authentication temporarily disabled. All features accessible for testing.
             </p>
           </div>
-        </div>
-      </div>
-      <h1 className="text-3xl font-bold mb-6">
-        Benvenuto, {profile?.full_name || user?.email || 'Tester'}!
-      </h1>
-      
-      <div className="grid md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg border shadow-sm">
-          <h3 className="text-sm text-gray-600 mb-2">Piano</h3>
-          <p className="text-2xl font-bold capitalize">{subscription?.plan_name || 'Starter'}</p>
-          <p className="text-sm text-gray-500 mt-1">
-            {subscription?.status === 'trialing' ? '🎁 Trial Gratuito' : '✅ Abbonamento attivo'}
-          </p>
-        </div>
-        
-        <div className="bg-white p-6 rounded-lg border shadow-sm">
-          <h3 className="text-sm text-gray-600 mb-2">Conversioni disponibili</h3>
-          <p className="text-2xl font-bold">
-            {subscription?.status === 'trialing' 
-              ? `${Math.max(0, 1 - (usage?.articles_generated || 0))} / 1`
-              : `${usage?.articles_generated || 0} / ${usage?.articles_limit || 12}`
-            }
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
-            {subscription?.status === 'trialing' ? 'Versione gratuita' : 'Questo mese'}
-          </p>
-        </div>
-        
-        <div className="bg-white p-6 rounded-lg border shadow-sm">
-          <h3 className="text-sm text-gray-600 mb-2">
-            {subscription?.status === 'trialing' ? 'Trial disponibile fino al' : 'Prossimo rinnovo'}
-          </h3>
-          <p className="text-lg font-semibold">
-            {subscription?.trial_end 
-              ? new Date(subscription.trial_end).toLocaleDateString('it-IT')
-              : subscription?.current_period_end 
-                ? new Date(subscription.current_period_end).toLocaleDateString('it-IT')
-                : 'N/A'}
-          </p>
         </div>
       </div>
 
-      {/* Upload Form */}
-      <div className="bg-white p-8 rounded-lg border shadow-sm mb-8">
-        <h2 className="text-2xl font-bold mb-4">🎙️ Carica un Podcast</h2>
-        
-        {isFreeUser ? (
-          <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-8 rounded-lg border-2 border-purple-200 text-center">
-            <div className="text-5xl mb-4">🚀</div>
-            <h3 className="text-2xl font-bold mb-3">Hai usato la tua conversione gratuita!</h3>
-            <p className="text-gray-700 mb-6">
-              Passa al piano Pro per sbloccare 12 conversioni al mese e funzionalità avanzate.
+      {/* Welcome Header */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-3">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-blue-900 bg-clip-text text-transparent">
+            Benvenuto, {profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Tester'}!
+          </h1>
+          <Sparkles className="h-8 w-8 text-purple-500" />
+        </div>
+        <p className="text-gray-600">
+          Trasforma i tuoi podcast in articoli SEO-optimized con l'intelligenza artificiale
+        </p>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid gap-6 md:grid-cols-3">
+        {/* Plan Card */}
+        <div className="group relative bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="relative p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Zap className="h-5 w-5 text-purple-600" />
+              </div>
+              <Badge variant={subscription?.status === 'trialing' ? 'secondary' : 'default'} className="font-medium">
+                {subscription?.status === 'trialing' ? 'Trial' : 'Active'}
+              </Badge>
+            </div>
+            <h3 className="text-sm font-medium text-gray-600 mb-1">Piano Attuale</h3>
+            <p className="text-2xl font-bold capitalize mb-2">
+              {subscription?.plan_name || 'Starter'}
             </p>
-            <div className="bg-white p-6 rounded-lg inline-block shadow-md">
-              <p className="text-4xl font-bold text-purple-600 mb-2">€19<span className="text-lg text-gray-500">/mese</span></p>
-              <ul className="text-left space-y-2 mb-4">
-                <li className="flex items-center gap-2"><span className="text-green-500">✓</span> 12 articoli al mese</li>
-                <li className="flex items-center gap-2"><span className="text-green-500">✓</span> Trascrizione illimitata</li>
-                <li className="flex items-center gap-2"><span className="text-green-500">✓</span> SEO avanzato</li>
-                <li className="flex items-center gap-2"><span className="text-green-500">✓</span> Supporto prioritario</li>
-              </ul>
-              <button className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-bold hover:bg-purple-700 transition">
-                Upgrade a Pro
-              </button>
+            <p className="text-sm text-gray-500">
+              {subscription?.status === 'trialing' ? '🎁 Trial Gratuito' : '✅ Abbonamento attivo'}
+            </p>
+          </div>
+        </div>
+
+        {/* Usage Card */}
+        <div className="group relative bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="relative p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <FileText className="h-5 w-5 text-blue-600" />
+              </div>
+              <Badge 
+                variant={articlesRemaining === 0 ? 'destructive' : articlesRemaining <= 2 ? 'secondary' : 'outline'}
+                className="font-medium"
+              >
+                {articlesRemaining} rimanenti
+              </Badge>
+            </div>
+            <h3 className="text-sm font-medium text-gray-600 mb-1">Conversioni Disponibili</h3>
+            <p className="text-2xl font-bold mb-2">
+              {articlesUsed} / {articlesLimit}
+            </p>
+            {/* Progress Bar */}
+            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+              <div 
+                className={`h-full rounded-full transition-all duration-500 ${
+                  usagePercentage >= 100 ? 'bg-red-500' : 
+                  usagePercentage >= 80 ? 'bg-amber-500' : 
+                  'bg-blue-500'
+                }`}
+                style={{ width: `${Math.min(usagePercentage, 100)}%` }}
+              />
             </div>
           </div>
-        ) : hasReachedLimit ? (
-          <div className="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
-            <p className="text-yellow-800 font-semibold">⚠️ Hai raggiunto il limite mensile di conversioni.</p>
-            <p className="text-sm text-gray-600 mt-2">Il tuo limite si resetterà il prossimo mese.</p>
+        </div>
+
+        {/* Renewal/Trial End Card */}
+        <div className="group relative bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="relative p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-2 bg-emerald-100 rounded-lg">
+                <Clock className="h-5 w-5 text-emerald-600" />
+              </div>
+            </div>
+            <h3 className="text-sm font-medium text-gray-600 mb-1">
+              {subscription?.status === 'trialing' ? 'Trial disponibile fino al' : 'Prossimo rinnovo'}
+            </h3>
+            <p className="text-xl font-semibold">
+              {subscription?.trial_end 
+                ? new Date(subscription.trial_end).toLocaleDateString('it-IT', { 
+                    day: 'numeric', 
+                    month: 'long',
+                    year: 'numeric'
+                  })
+                : subscription?.current_period_end 
+                  ? new Date(subscription.current_period_end).toLocaleDateString('it-IT', {
+                      day: 'numeric', 
+                      month: 'long'
+                    })
+                  : 'N/A'}
+            </p>
           </div>
-        ) : (
-          <UploadForm userId={user?.id || 'test-user'} />
-        )}
+        </div>
       </div>
 
-      {/* Articles List */}
-      {articles && articles.length > 0 && (
-        <div className="bg-white p-8 rounded-lg border shadow-sm">
-          <h2 className="text-2xl font-bold mb-4">📝 I Tuoi Articoli</h2>
-          <ArticlesList articles={articles} />
+      <Separator className="my-8" />
+
+      {/* Upload Section */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
+              <Upload className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-white">Carica un Podcast</h2>
+              <p className="text-purple-100 text-sm mt-1">
+                Trasforma audio in articoli professionali in pochi minuti
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-8">
+          {isFreeUser ? (
+            <div className="bg-gradient-to-br from-purple-50 via-white to-blue-50 p-8 rounded-xl border-2 border-purple-200 text-center">
+              <div className="text-6xl mb-4">🚀</div>
+              <h3 className="text-3xl font-bold mb-3 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                Hai usato la tua conversione gratuita!
+              </h3>
+              <p className="text-gray-700 mb-8 max-w-md mx-auto">
+                Passa al piano Pro per sbloccare 12 conversioni al mese e funzionalità avanzate.
+              </p>
+              <div className="bg-white p-8 rounded-xl inline-block shadow-lg border border-gray-200 max-w-sm">
+                <p className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                  €19<span className="text-xl text-gray-500">/mese</span>
+                </p>
+                <ul className="text-left space-y-3 mb-6 mt-6">
+                  <li className="flex items-center gap-3">
+                    <div className="h-5 w-5 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-green-600 text-xs">✓</span>
+                    </div>
+                    <span className="text-gray-700">12 articoli al mese</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <div className="h-5 w-5 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-green-600 text-xs">✓</span>
+                    </div>
+                    <span className="text-gray-700">Trascrizione illimitata</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <div className="h-5 w-5 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-green-600 text-xs">✓</span>
+                    </div>
+                    <span className="text-gray-700">SEO avanzato</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <div className="h-5 w-5 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-green-600 text-xs">✓</span>
+                    </div>
+                    <span className="text-gray-700">Supporto prioritario</span>
+                  </li>
+                </ul>
+                <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200">
+                  <TrendingUp className="mr-2 h-5 w-5" />
+                  Upgrade a Pro
+                </Button>
+              </div>
+            </div>
+          ) : hasReachedLimit ? (
+            <div className="bg-amber-50 p-6 rounded-xl border border-amber-200 flex items-start gap-4">
+              <AlertCircle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-1" />
+              <div>
+                <p className="text-amber-900 font-semibold text-lg">
+                  Limite mensile raggiunto
+                </p>
+                <p className="text-amber-700 mt-2">
+                  Il tuo limite si resetterà il prossimo mese. Considera l'upgrade per aumentare il limite.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <UploadForm userId={user?.id || 'test-user'} />
+          )}
+        </div>
+      </div>
+
+      {/* Articles Section */}
+      {articles && articles.length > 0 ? (
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="px-8 py-6 border-b border-gray-200 bg-gray-50/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <FileText className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">I Tuoi Articoli</h2>
+                  <p className="text-sm text-gray-600 mt-0.5">
+                    {articles.length} {articles.length === 1 ? 'articolo' : 'articoli'} creati
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="p-8">
+            <ArticlesList articles={articles} />
+          </div>
+        </div>
+      ) : (
+        // Empty State
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-12 text-center">
+          <div className="max-w-md mx-auto">
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FileText className="h-10 w-10 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Nessun articolo ancora
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Inizia caricando il tuo primo podcast e trasformalo in un articolo professionale
+            </p>
+            <Button asChild className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
+              <a href="#upload">
+                <Upload className="mr-2 h-4 w-4" />
+                Carica il tuo primo podcast
+              </a>
+            </Button>
+          </div>
         </div>
       )}
     </div>
