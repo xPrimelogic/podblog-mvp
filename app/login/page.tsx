@@ -27,17 +27,36 @@ export default function LoginPage() {
     const email = formData.get('email') as string
     const password = formData.get('password') as string
 
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (authError) {
-      setError(authError.message)
+    try {
+      console.log('🔐 Attempting login for:', email)
+      
+      // Add timeout to prevent hanging
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000)
+      
+      const { error: authError, data } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      
+      clearTimeout(timeoutId)
+      
+      console.log('Auth response:', { error: authError, data })
+      
+      if (authError) {
+        console.error('Auth error:', authError)
+        setError(authError.message)
+        setLoading(false)
+      } else {
+        console.log('✅ Login successful for:', email)
+        console.log('🔑 Session created, redirecting...')
+        router.push('/dashboard')
+        router.refresh()
+      }
+    } catch (err: any) {
+      console.error('Login exception:', err)
+      setError(err.message || 'An unexpected error occurred')
       setLoading(false)
-    } else {
-      router.push('/dashboard')
-      router.refresh()
     }
   }
 
