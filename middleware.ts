@@ -68,7 +68,12 @@ export async function middleware(request: NextRequest) {
   
   const isPublicApiRoute = request.nextUrl.pathname.startsWith('/api/auth/') ||
                            request.nextUrl.pathname === '/api/protected' ||
-                           request.nextUrl.pathname.startsWith('/api/waitlist')
+                           request.nextUrl.pathname.startsWith('/api/waitlist') ||
+                           request.nextUrl.pathname.startsWith('/api/checkout') ||
+                           request.nextUrl.pathname.startsWith('/api/subscription') ||
+                           request.nextUrl.pathname.startsWith('/api/webhooks')
+  
+  const isPaidFeature = request.nextUrl.pathname.startsWith('/dashboard')
   
   const isProtectedPage = (request.nextUrl.pathname.startsWith('/dashboard') ||
                          (request.nextUrl.pathname.startsWith('/api') && !isPublicApiRoute))

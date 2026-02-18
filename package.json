@@ -16,6 +16,7 @@
     "@react-email/components": "^1.0.7",
     "@react-email/html": "^0.0.12",
     "@react-email/text": "^0.1.6",
+    "@stripe/react-stripe-js": "^5.6.0",
     "@supabase/ssr": "^0.9.0-rc.2",
     "@supabase/supabase-js": "^2.95.3",
     "bcrypt": "^6.0.0",
@@ -36,6 +37,7 @@
     "react-hook-form": "^7.71.1",
     "rss-parser": "^3.13.0",
     "sharp": "^0.34.5",
+    "stripe": "^20.3.1",
     "tailwind-merge": "^3.4.0",
     "yt-dlp-wrap": "^2.3.12",
     "zod": "^4.3.6"
