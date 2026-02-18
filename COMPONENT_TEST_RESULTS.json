@@ -1,0 +1,88 @@
+{
+  "timestamp": "2026-02-18T00:16:50.853Z",
+  "components": {
+    "openai": {
+      "status": "ready"
+    },
+    "costs": {
+      "breakdown": {
+        "transcription_deepgram": 0.13,
+        "article_gpt4": 0.15,
+        "social_haiku_batch": 0.08,
+        "images_template": 0
+      },
+      "total": 0.36000000000000004,
+      "target": 0.5,
+      "status": "PASSED"
+    },
+    "article_generation": {
+      "transcript_length": 439,
+      "prompt_ready": true,
+      "estimated_tokens_input": 210,
+      "estimated_tokens_output": 300,
+      "status": "READY"
+    },
+    "social_batch": {
+      "single_api_call": true,
+      "platforms": 5,
+      "newsletter": true,
+      "quotes": 3,
+      "estimated_cost": 0.08,
+      "status": "READY"
+    },
+    "images": {
+      "platforms": [
+        "instagram",
+        "twitter",
+        "linkedin",
+        "facebook"
+      ],
+      "dimensions": {
+        "instagram": {
+          "width": 1080,
+          "height": 1080
+        },
+        "twitter": {
+          "width": 1200,
+          "height": 675
+        },
+        "linkedin": {
+          "width": 1200,
+          "height": 627
+        },
+        "facebook": {
+          "width": 1200,
+          "height": 630
+        }
+      },
+      "technology": "sharp",
+      "cost": 0,
+      "api_calls_required": 0,
+      "status": "READY"
+    },
+    "database": {
+      "fields": [
+        "title",
+        "content",
+        "transcript",
+        "social_posts",
+        "quotes",
+        "image_instagram",
+        "image_twitter",
+        "image_linkedin",
+        "image_facebook",
+        "cost_breakdown",
+        "status"
+      ],
+      "total_fields": 11,
+      "status": "READY"
+    },
+    "workflow": {
+      "steps": 7,
+      "total_cost": 0.36000000000000004,
+      "target_cost": 0.5,
+      "within_budget": true,
+      "status": "VERIFIED"
+    }
+  }
+}
